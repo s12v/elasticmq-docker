@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticmq
+  labels:
+    role: elasticmq
+spec:
+  type: NodePort
+  ports:
+  - port: 9324
+    name: control
+    nodePort: 30932
+  selector:
+    role: elasticmq
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: elasticmq
+  namespace: default
+data:
+  elasticmq.conf.file: |-
+    include classpath("application.conf")
+
+    // What is the outside visible address of this ElasticMQ node (used by rest-sqs)
+    node-address {
+        protocol = http
+        host = elasticmq
+        port = 9324
+        context-path = ""
+    }
+
+    rest-sqs {
+        enabled = true
+        bind-port = 9324
+        bind-hostname = "0.0.0.0"
+        // Possible values: relaxed, strict
+        sqs-limits = relaxed
+    }
+---
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: elasticmq
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: elasticmq
+        role: elasticmq
+    spec:
+      containers:
+      - name: elasticmq
+        image: elasticmq:0.13.2
+        ports:
+        - name: control
+          containerPort: 9324
+        volumeMounts:
+        - name: elasticmq-conf
+          mountPath: /etc/elasticmq
+      volumes:
+      - name: elasticmq-conf
+        configMap:
+          name: elasticmq
+          items:
+          - key: elasticmq.conf.file
+            path: elasticmq.conf
