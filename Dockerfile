@@ -1,4 +1,4 @@
-FROM java:8-jre-alpine
+FROM java:8-jre
 
 ARG VERSION=0.9.3
 
