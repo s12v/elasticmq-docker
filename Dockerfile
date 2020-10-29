@@ -1,6 +1,6 @@
 FROM openjdk:8-jre-alpine
 
-ARG VERSION=0.15.7
+ARG VERSION=0.15.8
 
 EXPOSE 9324
 
